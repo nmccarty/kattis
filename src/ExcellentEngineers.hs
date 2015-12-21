@@ -23,11 +23,11 @@ import Data.List (sortBy, nub)
 import Data.Function (on)
 import System.IO (getContents)
 
-type Engineer = (Int, Int, Int)
+data Engineer = Engineer {-# UNPACK #-} !Int {-# UNPACK #-} !Int {-# UNPACK #-} !Int
 
-communication (x,_,_) = x
-programming (_,x,_) = x
-algorithims (_,_,x) = x
+communication (Engineer x _ _) = x
+programming (Engineer _ x _) = x
+algorithims (Engineer _ _ x) = x
 
 betterAt :: (Engineer -> Int) -> Engineer -> Engineer -> Bool
 betterAt f engineer other =
@@ -61,7 +61,7 @@ getEngineer =
      let [(first,xs1)] = reads line
          [(second,xs2)] = reads xs1
          [(third,xs3)] = reads xs2
-     return $! (first, second, third)
+     return $! Engineer first second third
 
 getEngineers :: Int -> IO [Engineer]
 getEngineers n = replicateM n getEngineer
