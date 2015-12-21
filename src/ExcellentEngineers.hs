@@ -17,12 +17,11 @@ module Main (
     main
 ) where
 
-import Control.Monad (liftM)
+import Control.Monad (liftM, replicateM)
 import Control.Arrow ((>>>))
 import Data.List (sortBy, nub)
 import Data.Function (on)
 import System.IO (getContents)
-import Control.Concurrent
 
 type Engineer = (Int, Int, Int)
 
@@ -42,15 +41,10 @@ betterAtAll engineer other =
     && betterAt programming engineer other
     && betterAt algorithims engineer other
 
-seperateAndSort :: [Engineer] -> ([Engineer],[Engineer],[Engineer])
-seperateAndSort list = (sortBy (compare `on` communication) list
-                       , sortBy (compare `on` programming) list
-                       , sortBy (compare `on` algorithims) list)
-
 shortList :: [Engineer] -> [Engineer]
 shortList list =
     filter betterThanOthersInAll com
-    where (com, prog, algo) = seperateAndSort list
+    where com = sortBy (compare `on` communication) list
           betterThanMeIn :: (Engineer -> Int) -> Engineer -> [Engineer] -> [Engineer]
           betterThanMeIn f engineer list =
             let canidates = takeWhile (\x -> f x < f engineer) list
@@ -58,10 +52,8 @@ shortList list =
             in betterThanMe
           betterThanOthersInAll :: Engineer -> Bool
           betterThanOthersInAll engineer =
-            let comCanidates = betterThanMeIn communication engineer com
-                progCanidates = betterThanMeIn programming engineer prog
-                algoCanidates = betterThanMeIn algorithims engineer algo
-            in null . nub $ comCanidates ++ progCanidates ++ algoCanidates
+            let canidates = betterThanMeIn communication engineer com
+            in null canidates
 
 getEngineer :: IO Engineer
 getEngineer =
@@ -69,10 +61,10 @@ getEngineer =
      let [(first,xs1)] = reads line
          [(second,xs2)] = reads xs1
          [(third,xs3)] = reads xs2
-     return (first, second, third)
+     return $! (first, second, third)
 
 getEngineers :: Int -> IO [Engineer]
-getEngineers n = sequence $ replicate n getEngineer
+getEngineers n = replicateM n getEngineer
 
 doTestCase :: IO Int
 doTestCase =
@@ -82,5 +74,5 @@ doTestCase =
 
 main =
   do !testCases <- liftM read getLine :: IO Int
-     values <- sequence $ replicate testCases doTestCase
+     values <- replicateM testCases doTestCase
      mapM print values
