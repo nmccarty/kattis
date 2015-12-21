@@ -21,7 +21,9 @@ import Control.Monad (liftM, replicateM)
 import Control.Arrow ((>>>))
 import Data.List (sortBy, nub)
 import Data.Function (on)
-import System.IO (getContents)
+import qualified Data.Text.Read as Read
+import qualified Data.Text.IO as TextIO
+import qualified Data.Text as Text
 
 data Engineer = Engineer {-# UNPACK #-} !Int {-# UNPACK #-} !Int {-# UNPACK #-} !Int
 
@@ -55,12 +57,15 @@ shortList list =
             let canidates = betterThanMeIn communication engineer com
             in null canidates
 
+textread :: Text.Text -> Int
+textread text = let (Right (x,_)) = Read.decimal text
+                in x
+
 getEngineer :: IO Engineer
 getEngineer =
-  do !line <- getLine
-     let [(first,xs1)] = reads line
-         [(second,xs2)] = reads xs1
-         [(third,xs3)] = reads xs2
+  do !line <- TextIO.getLine
+     let nums = Text.words line
+         [first, second, third] = map textread nums
      return $! Engineer first second third
 
 getEngineers :: Int -> IO [Engineer]
@@ -68,11 +73,11 @@ getEngineers n = replicateM n getEngineer
 
 doTestCase :: IO Int
 doTestCase =
-  do !times <- liftM read getLine :: IO Int
+  do !times <- liftM textread TextIO.getLine :: IO Int
      engineers <- getEngineers times
      return $! length (shortList engineers)
 
 main =
-  do !testCases <- liftM read getLine :: IO Int
+  do !testCases <- liftM textread TextIO.getLine :: IO Int
      values <- replicateM testCases doTestCase
      mapM print values
