@@ -11,12 +11,11 @@
 -- |
 --
 -----------------------------------------------------------------------------
+{-# LANGUAGE BangPatterns #-}
 
 module Main (
     main
 ) where
-
-{-# LANGUAGE BangPatterns #-}
 
 import Control.Monad (liftM)
 import Control.Arrow ((>>>))
@@ -64,20 +63,24 @@ shortList list =
                 algoCanidates = betterThanMeIn algorithims engineer algo
             in null . nub $ comCanidates ++ progCanidates ++ algoCanidates
 
-main = do
-    input <- liftM lines getContents
-    let testCases = (read . head $ input) :: Int
-    doTestCases testCases $ tail input
-    where doTestCases 0 x = return ()
-          doTestCases n input =
-            do let numLines = read . head $ input
-                   lines = take numLines (drop 1 input)
-                   rest = drop (numLines + 1) input
-                   strings = map words $! lines
-                   engineers = map parseEngineer strings
-               print . length $ shortList engineers
-               doTestCases (n-1) $! rest
-          parseEngineer :: [String] -> Engineer
-          parseEngineer xs =
-            let [a,b,c] = map read $! xs
-            in (a,b,c)
+getEngineer :: IO Engineer
+getEngineer =
+  do !line <- getLine
+     let [(first,xs1)] = reads line
+         [(second,xs2)] = reads xs1
+         [(third,xs3)] = reads xs2
+     return (first, second, third)
+
+getEngineers :: Int -> IO [Engineer]
+getEngineers n = sequence $ replicate n getEngineer
+
+doTestCase :: IO Int
+doTestCase =
+  do !times <- liftM read getLine :: IO Int
+     engineers <- getEngineers times
+     return $! length (shortList engineers)
+
+main =
+  do !testCases <- liftM read getLine :: IO Int
+     values <- sequence $ replicate testCases doTestCase
+     mapM print values
