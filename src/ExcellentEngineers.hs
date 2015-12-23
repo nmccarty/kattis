@@ -19,13 +19,14 @@ module Main (
 
 import Control.Monad (liftM, replicateM)
 import Control.Arrow ((>>>))
-import Data.List (sortBy, nub)
+import Data.List (sortBy, nub, minimumBy, delete)
 import Data.Function (on)
 import qualified Data.Text.Read as Read
 import qualified Data.Text.IO as TextIO
 import qualified Data.Text as Text
 
 data Engineer = Engineer {-# UNPACK #-} !Int {-# UNPACK #-} !Int {-# UNPACK #-} !Int
+                deriving (Eq)
 
 communication (Engineer x _ _) = x
 programming (Engineer _ x _) = x
@@ -45,11 +46,11 @@ betterAtAll engineer other =
 
 shortList :: [Engineer] -> [Engineer]
 shortList list =
-    filter betterThanOthersInAll com
-    where com = sortBy (compare `on` communication) list
+    takeWhile betterThanOthersInAll com
+    where com = list
           betterThanMeIn :: (Engineer -> Int) -> Engineer -> [Engineer] -> [Engineer]
           betterThanMeIn f engineer list =
-            let canidates = takeWhile (\x -> f x < f engineer) list
+            let canidates = filter (\x -> f x < f engineer) list
                 betterThanMe = filter (`betterAtAll` engineer) canidates
             in betterThanMe
           betterThanOthersInAll :: Engineer -> Bool
