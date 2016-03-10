@@ -36,13 +36,14 @@ availableSquares board queens =
               slope = dr/dc
           in (abs slope) == 1
 
-addNextQueen :: [(Int,Int)] -> Int -> [(Int, Int)] -> [[(Int, Int)]]
+addNextQueen :: [(Int,Int)] -> Int -> [(Int, Int)] -> [([(Int, Int)],[(Int, Int)])]
 addNextQueen board row queens = do
-  canidateSquare <- availableSquares board queens
+  canidateSquare <- board
   guard $ fst canidateSquare == row
   let newQueens = canidateSquare:queens
-  guard $ (length $ availableSquares board newQueens) > 0
-  return newQueens
+      newBoard = availableSquares board [canidateSquare]
+  guard $ (length newBoard) > 0
+  return (newBoard, newQueens)
 
 addQueens :: [(Int,Int)] -> Int -> [(Int, Int)] -> [[(Int, Int)]]
 addQueens board 0 queens = return queens
@@ -51,8 +52,8 @@ addQueens board 1 queens = do
   let newQueens = newQueen:queens
   return newQueens
 addQueens board n queens = do
-  newQueens <- addNextQueen board n queens
-  addQueens board (n - 1) newQueens
+  (newBoard, newQueens) <- addNextQueen board n queens
+  addQueens newBoard (n - 1) newQueens
 
 main = do
   input <- getContents
